@@ -1,0 +1,1507 @@
+{
+  "id": "k1w5EwfZ90bfJywq",
+  "name": "Sistema Gestione Preventivi",
+  "description": null,
+  "active": true,
+  "activeVersionId": "2cd0f80b-2008-44bb-a086-ad1ab1bc81c1",
+  "createdAt": "2026-08-21T13:49:18.159Z",
+  "updatedAt": "2026-08-21T15:45:31.371Z",
+  "isArchived": false,
+  "versionId": "3380540f-d37b-41b9-8f8c-efd438d8f8b9",
+  "versionCounter": 99,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Invia richiesta di preventivo",
+        "formDescription": "Compila i dati principali: n8n normalizzera la richiesta e la salvera nel sistema preventivi.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nome Azienda",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Servizio richiesto",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "Automazione processi" },
+                  { "option": "Lead generation" },
+                  { "option": "Report/dashboard" },
+                  { "option": "Integrazione API" },
+                  { "option": "Altro" }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Budget",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "Indefinito" },
+                  { "option": "1-5000 EUR" },
+                  { "option": "5-10000 EUR" },
+                  { "option": "10-25000 EUR" },
+                  { "option": "Oltre 25000 EUR" }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Urgenza",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "Bassa" },
+                  { "option": "Media" },
+                  { "option": "Alta" }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Fonte contatto",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "Sito web" },
+                  { "option": "LinkedIn" },
+                  { "option": "Referral" },
+                  { "option": "Evento" },
+                  { "option": "Altro" }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Messaggio",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Invia richiesta",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Richiesta ricevuta. Il workflow la normalizzera e avvisera' il team commerciale."
+            }
+          },
+          "useWorkflowTimezone": true
+        }
+      },
+      "id": "9af33c51-8fe7-46b1-aa92-63f44ee4f599",
+      "name": "Form - Richiesta Preventivo",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [-592, 496],
+      "webhookId": "REPLACE_WITH_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "request_id",
+              "name": "request_id",
+              "type": "string",
+              "value": "={{ \"REQ-\" + $execution.id + \"-\" + $itemIndex }}"
+            },
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "id": "azienda",
+              "name": "azienda",
+              "type": "string",
+              "value": "={{ $json[\"Nome Azienda\"] || $json.body.azienda || \"\" }}"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json[\"Email\"] || $json.body.email || \"\" }}"
+            },
+            {
+              "id": "servizio",
+              "name": "servizio",
+              "type": "string",
+              "value": "={{ $json[\"Servizio richiesto\"] || $json.body.servizio || \"\" }}"
+            },
+            {
+              "id": "budget",
+              "name": "budget",
+              "type": "string",
+              "value": "={{ $json[\"Budget\"] || $json.body.budget ||  \"Indefinito\" }}"
+            },
+            {
+              "id": "urgenza",
+              "name": "urgenza",
+              "type": "string",
+              "value": "={{ $json[\"Urgenza\"] || $json.body.servizio || \"Media\" }}"
+            },
+            {
+              "id": "fonte",
+              "name": "fonte",
+              "type": "string",
+              "value": "={{ $json[\"Fonte contatto\"] || \"Form n8n\" }}"
+            },
+            {
+              "id": "messaggio",
+              "name": "messaggio",
+              "type": "string",
+              "value": "={{ $json[\"Messaggio\"] || $json.body.messaggio || \"\" }}"
+            },
+            {
+              "id": "source",
+              "name": "source",
+              "type": "string",
+              "value": "Form"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "78a86412-9606-4c25-b101-38eaac5149e0",
+      "name": "Prepara Dati Richiesta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-368, 496]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Listino",
+          "mode": "name",
+          "cachedResultName": "Listino"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Servizio",
+              "lookupValue": "={{ $json.output[0].content[0].text.servizio_richiesto || $('Prepara Dati Richiesta').item.json.servizio }}"
+            }
+          ]
+        },
+        "options": {
+          "outputFormatting": {
+            "values": {
+              "general": "FORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          },
+          "returnFirstMatch": true
+        }
+      },
+      "id": "5dbb2f6e-c00d-41d6-bbfb-4e015694ad3e",
+      "name": "Lookup Listino",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [432, 400],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "request_id",
+              "name": "request_id",
+              "type": "string",
+              "value": "={{$('Assegna Stato Priorita').item.json.request_id}}"
+            },
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.timestamp }}"
+            },
+            {
+              "id": "azienda",
+              "name": "azienda",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.azienda }}"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.email }}"
+            },
+            {
+              "id": "servizio",
+              "name": "servizio",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.servizio }}"
+            },
+            {
+              "id": "budget",
+              "name": "budget",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.budget }}"
+            },
+            {
+              "id": "urgenza",
+              "name": "urgenza",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.urgenza }}"
+            },
+            {
+              "id": "fonte",
+              "name": "fonte",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.fonte }}"
+            },
+            {
+              "id": "messaggio",
+              "name": "messaggio",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.messaggio }}"
+            },
+            {
+              "id": "source",
+              "name": "source",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.source }}"
+            },
+            {
+              "id": "prezzo_base",
+              "name": "prezzo_base",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.prezzo_base }}"
+            },
+            {
+              "id": "tempo_stimato",
+              "name": "tempo_stimato",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.tempo_stimato }}"
+            },
+            {
+              "id": "note_listino",
+              "name": "note_listino",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.note_listino }}"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.status }}"
+            },
+            {
+              "id": "priorita",
+              "name": "priorita",
+              "type": "string",
+              "value": "={{ $('Assegna Stato Priorita').item.json.priorita }}"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "ea4e07e8-0253-46f8-84f0-22bba334a810",
+      "name": "Prepara Riga Sheet",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1232, 400]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Richieste",
+          "mode": "name",
+          "cachedResultName": "Richieste"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Request ID": "={{ $json.request_id }}",
+            "Timestamp": "={{ $json.timestamp }}",
+            "Azienda": "={{ $json.azienda }}",
+            "Email": "={{ $json.email }}",
+            "Servizio": "={{ $json.servizio }}",
+            "Budget": "={{ $json.budget }}",
+            "Urgenza": "={{ $json.urgenza }}",
+            "Fonte": "={{ $json.fonte }}",
+            "Prezzo base": "={{ $json.prezzo_base }}",
+            "Tempo stimato": "={{ $json.tempo_stimato }}",
+            "Status": "={{ $json.status }}",
+            "Messaggio": "={{ $json.messaggio }}",
+            "Priorita": "={{ $json.priorita }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "Request ID", "displayName": "Request ID", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Timestamp", "displayName": "Timestamp", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Azienda", "displayName": "Azienda", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Email", "displayName": "Email", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Servizio", "displayName": "Servizio", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Budget", "displayName": "Budget", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Urgenza", "displayName": "Urgenza", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Fonte", "displayName": "Fonte", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Prezzo base", "displayName": "Prezzo base", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Tempo stimato", "displayName": "Tempo stimato", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Status", "displayName": "Status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Priorita", "displayName": "Priorita", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false },
+            { "id": "Messaggio", "displayName": "Messaggio", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED",
+          "locationDefine": {
+            "values": {}
+          }
+        }
+      },
+      "id": "ae7632f0-2bfa-4ba3-9c73-c528cca78ec1",
+      "name": "Salva Richiesta",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [1456, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "request_id",
+              "name": "request_id",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.request_id }}"
+            },
+            {
+              "id": "azienda",
+              "name": "azienda",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.azienda }}"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.email }}"
+            },
+            {
+              "id": "servizio",
+              "name": "servizio",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.servizio }}"
+            },
+            {
+              "id": "budget",
+              "name": "budget",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.budget }}"
+            },
+            {
+              "id": "urgenza",
+              "name": "urgenza",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.urgenza }}"
+            },
+            {
+              "id": "fonte",
+              "name": "fonte",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.fonte }}"
+            },
+            {
+              "id": "messaggio",
+              "name": "messaggio",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.messaggio }}"
+            },
+            {
+              "id": "source",
+              "name": "source",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.source }}"
+            },
+            {
+              "id": "prezzo_base",
+              "name": "prezzo_base",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.prezzo_base }}"
+            },
+            {
+              "id": "tempo_stimato",
+              "name": "tempo_stimato",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.tempo_stimato }}"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.status }}"
+            },
+            {
+              "id": "priorita",
+              "name": "priorita",
+              "type": "string",
+              "value": "={{ $('Prepara Riga Sheet').item.json.priorita }}"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "6b7043a7-b804-4f44-9e4f-716d59eefdde",
+      "name": "Prepara Notifica",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1680, 400]
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@DOMAIN.com",
+        "subject": "={{ \"Nuova richiesta preventivo - \" + $json.status + \" - \" + $json.azienda }}",
+        "emailType": "text",
+        "message": "=Hai ricevuto una nuova richiesta di preventivo.\n\nRequest ID: {{ $json.request_id }}\nCanale input: {{ $json.source }}\nAzienda: {{ $json.azienda }}\nEmail: {{ $json.email }}\nServizio: {{ $json.servizio }}\nBudget: {{ $json.budget }}\nUrgenza: {{ $json.urgenza }}\nFonte contatto: {{ $json.fonte }}\n\nStatus: {{ $json.status }}\nPriorita: {{ $json.priorita }}\nPrezzo base da listino: {{ $json.prezzo_base || 'non trovato' }}\nTempo stimato: {{ $json.tempo_stimato || 'non trovato' }}\n\nMessaggio:\n{{ $json.messaggio }}\n\n---\nOFFER BRIEF AI:\n{{ $('AI Offer Brief').item.json.output[0].content[0].text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a6313d76-cfaf-46e0-b0c9-acd3e0743a86",
+      "name": "Notifica Commerciale",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [1904, 400],
+      "webhookId": "REPLACE_WITH_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "f675289c-486b-48eb-a7b7-8e1322c5e740",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-592, 816]
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@DOMAIN.com",
+        "subject": "={{ \"Errore workflow - \" + $json.workflow.name }}",
+        "emailType": "text",
+        "message": "=Il workflow ha generato un errore.\n\nWorkflow: {{ $json.workflow.name }}\nExecution ID: {{ $json.execution.id }}\nErrore: {{ $json.execution.error.message }}\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "1a7d6c26-0895-484f-82fe-076a7b92b2c0",
+      "name": "Notify Workflow Error",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [-368, 816],
+      "webhookId": "REPLACE_WITH_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "GPT-5.6-LUNA"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Sei un assistente di qualificazione commerciale.\nIl tuo compito è analizzare una richiesta in linguaggio naturale e restituire\nun oggetto JSON strutturato con le informazioni estratte.\n\n\nREGOLE FONDAMENTALI:\n- Non inventare MAI informazioni non presenti nel testo.\n- Se un campo non è presente nel testo, impostalo a null.\n- Non aggiungere campi extra non previsti dallo schema.\n- Rispondi SOLO con il JSON, senza testo aggiuntivo, senza markdown.\n\n\nSCHEMA OUTPUT:\n{\n  \"azienda\": string | null,\n  \"email\": string | null,\n  \"servizio_richiesto\": string,\n  \"budget\": string | null,\n  \"urgenza\": \"Alta\" | \"Media\" | \"Bassa\" | null,\n  \"fonte\": string | null,\n  \"messaggio_originale\": string,\n  \"campi_mancanti\": string[],\n  \"domande_chiarimento\": string[],\n  \"status\": \"Nuova richiesta\" | \"Da qualificare\",\n  \"next_action\": \"proceed\" | \"ask_clarification\"\n}\n\n\nLOGICA STATUS E NEXT_ACTION:\n- Se servizio_richiesto è chiaro E budget non è null → status: \"Nuova richiesta\", next_action: \"proceed\"\n- In tutti gli altri casi → status: \"Da qualificare\", next_action: \"ask_clarification\"\n\n\nLOGICA URGENZA:\n- Alta: parole come \"urgente\", \"subito\", \"entro X giorni\", \"fine mese\", \"prima possibile\"\n- Bassa: parole come \"non ho fretta\", \"quando volete\", \"nei prossimi mesi\"\n- Media: tutto il resto o nessun indicatore\n"
+            },
+            {
+              "content": "=Analizza questa richiesta commerciale e restituisci il JSON strutturato.\n\n\nRichiesta:\n{{ $json.azienda }}\n{{ $json.email }}\n{{ $json.servizio }}\n{{ $json.budget }}\n{{ $json.urgenza }}\n{{ $json.fonte }}\n{{ $json.messaggio }}\n\n\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "verbosity": "low",
+              "schema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"properties\": {\n    \"azienda\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"email\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"servizio_richiesto\": {\n      \"type\": \"string\"\n    },\n    \"budget\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"urgenza\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"Alta\", \"Media\", \"Bassa\", null]\n    },\n    \"fonte\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"messaggio_originale\": {\n      \"type\": \"string\"\n    },\n    \"campi_mancanti\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"domande_chiarimento\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\"Nuova richiesta\", \"Da qualificare\"]\n    },\n    \"next_action\": {\n      \"type\": \"string\",\n      \"enum\": [\"proceed\", \"ask_clarification\"]\n    }\n  },\n  \"required\": [\n    \"azienda\",\n    \"email\",\n    \"servizio_richiesto\",\n    \"budget\",\n    \"urgenza\",\n    \"fonte\",\n    \"messaggio_originale\",\n    \"campi_mancanti\",\n    \"domande_chiarimento\",\n    \"status\",\n    \"next_action\"\n  ]\n}"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [-144, 496],
+      "id": "bab56f61-4a7d-47e5-a48d-501d0391a5fb",
+      "name": "AI Qualification Node",
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_WITH_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a19d7df7-e750-4ad3-9032-f02a216b59dc",
+              "leftValue": "={{ $json.output[0].content[0].text.next_action }}",
+              "rightValue": "proceed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [208, 496],
+      "id": "b0076b61-3f42-47be-8c94-819469a508b6",
+      "name": "IF next_action"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "GPT-5.6-LUNA"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Sei un assistente commerciale interno per un'agenzia di automazione.\nPrepara un brief sintetico e operativo per il team commerciale.\nRispondi SOLO con il brief, senza testo aggiuntivo.\n\nStruttura obbligatoria (usa esattamente questi titoli):\n\nSINTESI RICHIESTA\n[1-2 righe: chi ha scritto, cosa vuole, contesto rilevante]\n\nSERVIZIO E PREZZO\n[servizio richiesto, prezzo base da listino, tempo stimato]\n\nSEGNALI DI RISCHIO\n[budget vs prezzo, scope definito, urgenza senza budget. Se nessun rischio: Nessun rischio rilevante.]\n\nPROSSIMO PASSO\n[una frase sola: cosa deve fare il commerciale adesso]\n\nBOZZA EMAIL AL LEAD\n[email breve e professionale, tono caldo, includi prossimo step e firma generica]"
+            },
+            {
+              "content": "=Prepara il brief commerciale per questa richiesta.\n\nAzienda: {{ $json.azienda }}\nServizio richiesto: {{ $json.servizio }}\nBudget dichiarato: {{ $json.budget }}\nUrgenza: {{ $json.urgenza }}\nStatus: {{ $json.status }}\nMessaggio originale: {{ $json.messaggio }}\n\nDal listino:\nPrezzo base: {{ $json.prezzo_base || 'non trovato' }}\nTempo stimato: {{ $json.tempo_stimato || 'non trovato' }}\nNote: {{ $json.note_listino || 'nessuna' }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "4d374f62-513a-4915-926d-23f544794e2c",
+      "name": "AI Offer Brief",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [880, 400],
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_WITH_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "to",
+              "name": "to",
+              "type": "string",
+              "value": "={{ $json.output[0].content[0].text.email || '' }}"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "={{ 'Alcune informazioni sulla tua richiesta - ' + ($json.output[0].content[0].text.azienda || 'la tua azienda') }}"
+            },
+            {
+              "id": "body",
+              "name": "body",
+              "type": "string",
+              "value": "=Ciao,\n\nGrazie per averci contattato.\n\nPer prepararti una proposta accurata, avremmo bisogno di alcune informazioni aggiuntive:\n\n- {{ $json.output[0].content[0].text.domande_chiarimento.join('\\n- ') }}\n\nA presto,\nIl team"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "016bfe1d-8fd8-4cd2-856d-34aca20c35d3",
+      "name": "Prepara Email Chiarimento",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [432, 592]
+    },
+    {
+      "parameters": {
+        "sendTo": "=YOUR_EMAIL@DOMAIN.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "3e639e8f-854f-47b1-901e-02abacb38788",
+      "name": "Invia Email Chiarimento",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [656, 592],
+      "webhookId": "REPLACE_WITH_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "request_id",
+              "name": "request_id",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.request_id }}"
+            },
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.timestamp }}"
+            },
+            {
+              "id": "azienda",
+              "name": "azienda",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.azienda }}"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.email }}"
+            },
+            {
+              "id": "servizio",
+              "name": "servizio",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.servizio }}"
+            },
+            {
+              "id": "budget",
+              "name": "budget",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.budget }}"
+            },
+            {
+              "id": "urgenza",
+              "name": "urgenza",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.urgenza }}"
+            },
+            {
+              "id": "fonte",
+              "name": "fonte",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.fonte }}"
+            },
+            {
+              "id": "messaggio",
+              "name": "messaggio",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.messaggio }}"
+            },
+            {
+              "id": "source",
+              "name": "source",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.source }}"
+            },
+            {
+              "id": "prezzo_base",
+              "name": "prezzo_base",
+              "type": "string",
+              "value": "={{ $json[\"Prezzo base\"] || \"\" }}"
+            },
+            {
+              "id": "tempo_stimato",
+              "name": "tempo_stimato",
+              "type": "string",
+              "value": "={{ $json[\"Tempo stimato\"] || \"\" }}"
+            },
+            {
+              "id": "note_listino",
+              "name": "note_listino",
+              "type": "string",
+              "value": "={{ $json.Note || \"\" }}"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "type": "string",
+              "value": "={{ !$json[\"Prezzo base\"] || $('Prepara Dati Richiesta').item.json.budget === \"Indefinito\" ? \"Da qualificare\" : \"Nuova richiesta\" }}"
+            },
+            {
+              "id": "priorita",
+              "name": "priorita",
+              "type": "string",
+              "value": "={{ $('Prepara Dati Richiesta').item.json.urgenza === \"Alta\" ? \"Alta\" : \"Normale\" }}"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "940f7e5c-0649-4b3d-a6a2-588fd70269d6",
+      "name": "Assegna Stato Priorita",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [656, 400]
+    }
+  ],
+  "connections": {
+    "Form - Richiesta Preventivo": {
+      "main": [
+        [
+          {
+            "node": "Prepara Dati Richiesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Dati Richiesta": {
+      "main": [
+        [
+          {
+            "node": "AI Qualification Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Listino": {
+      "main": [
+        [
+          {
+            "node": "Assegna Stato Priorita",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Riga Sheet": {
+      "main": [
+        [
+          {
+            "node": "Salva Richiesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salva Richiesta": {
+      "main": [
+        [
+          {
+            "node": "Prepara Notifica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Notifica": {
+      "main": [
+        [
+          {
+            "node": "Notifica Commerciale",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Notify Workflow Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Qualification Node": {
+      "main": [
+        [
+          {
+            "node": "IF next_action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF next_action": {
+      "main": [
+        [
+          {
+            "node": "Lookup Listino",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepara Email Chiarimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Offer Brief": {
+      "main": [
+        [
+          {
+            "node": "Prepara Riga Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Email Chiarimento": {
+      "main": [
+        [
+          {
+            "node": "Invia Email Chiarimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assegna Stato Priorita": {
+      "main": [
+        [
+          {
+            "node": "AI Offer Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "activeVersion": {
+    "versionId": "2cd0f80b-2008-44bb-a086-ad1ab1bc81c1",
+    "workflowId": "k1w5EwfZ90bfJywq",
+    "nodes": [
+      {
+        "parameters": {
+          "formTitle": "Invia richiesta di preventivo",
+          "formDescription": "Compila i dati principali: n8n normalizzera la richiesta e la salvera nel sistema preventivi.",
+          "formFields": {
+            "values": [
+              { "fieldLabel": "Nome Azienda", "requiredField": true },
+              { "fieldLabel": "Email", "fieldType": "email", "requiredField": true },
+              {
+                "fieldLabel": "Servizio richiesto",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    { "option": "Automazione processi" },
+                    { "option": "Lead generation" },
+                    { "option": "Report/dashboard" },
+                    { "option": "Integrazione API" },
+                    { "option": "Altro" }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Budget",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    { "option": "Indefinito" },
+                    { "option": "1-5000 EUR" },
+                    { "option": "5-10000 EUR" },
+                    { "option": "10-25000 EUR" },
+                    { "option": "Oltre 25000 EUR" }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Urgenza",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    { "option": "Bassa" },
+                    { "option": "Media" },
+                    { "option": "Alta" }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Fonte contatto",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    { "option": "Sito web" },
+                    { "option": "LinkedIn" },
+                    { "option": "Referral" },
+                    { "option": "Evento" },
+                    { "option": "Altro" }
+                  ]
+                },
+                "requiredField": true
+              },
+              { "fieldLabel": "Messaggio", "fieldType": "textarea", "requiredField": true }
+            ]
+          },
+          "options": {
+            "appendAttribution": false,
+            "buttonLabel": "Invia richiesta",
+            "respondWithOptions": {
+              "values": {
+                "formSubmittedText": "Richiesta ricevuta. Il workflow la normalizzera e avvisera' il team commerciale."
+              }
+            },
+            "useWorkflowTimezone": true
+          }
+        },
+        "id": "9af33c51-8fe7-46b1-aa92-63f44ee4f599",
+        "name": "Form - Richiesta Preventivo",
+        "type": "n8n-nodes-base.formTrigger",
+        "typeVersion": 2.5,
+        "position": [-592, 400],
+        "webhookId": "REPLACE_WITH_WEBHOOK_ID"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              { "id": "request_id", "name": "request_id", "type": "string", "value": "={{ \"REQ-\" + $execution.id + \"-\" + $itemIndex }}" },
+              { "id": "timestamp", "name": "timestamp", "type": "string", "value": "={{ $now.toISO() }}" },
+              { "id": "azienda", "name": "azienda", "type": "string", "value": "={{ $json[\"Nome Azienda\"] || $json.body.azienda || \"\" }}" },
+              { "id": "email", "name": "email", "type": "string", "value": "={{ $json[\"Email\"] || $json.body.email || \"\" }}" },
+              { "id": "servizio", "name": "servizio", "type": "string", "value": "={{ $json[\"Servizio richiesto\"] || $json.body.servizio || \"\" }}" },
+              { "id": "budget", "name": "budget", "type": "string", "value": "={{ $json[\"Budget\"] || $json.body.budget ||  \"Indefinito\" }}" },
+              { "id": "urgenza", "name": "urgenza", "type": "string", "value": "={{ $json[\"Urgenza\"] || $json.body.servizio || \"Media\" }}" },
+              { "id": "fonte", "name": "fonte", "type": "string", "value": "={{ $json[\"Fonte contatto\"] || \"Form n8n\" }}" },
+              { "id": "messaggio", "name": "messaggio", "type": "string", "value": "={{ $json[\"Messaggio\"] || $json.body.messaggio || \"\" }}" },
+              { "id": "source", "name": "source", "type": "string", "value": "Form" }
+            ]
+          },
+          "options": { "ignoreConversionErrors": true }
+        },
+        "id": "78a86412-9606-4c25-b101-38eaac5149e0",
+        "name": "Prepara Dati Richiesta",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [-240, 400]
+      },
+      {
+        "parameters": {
+          "documentId": { "__rl": true, "value": "YOUR_GOOGLE_SHEET_ID", "mode": "id" },
+          "sheetName": { "__rl": true, "value": "Listino", "mode": "name", "cachedResultName": "Listino" },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "Servizio",
+                "lookupValue": "={{ $json.output[0].content[0].text.servizio_richiesto || $('Prepara Dati Richiesta').item.json.servizio }}"
+              }
+            ]
+          },
+          "options": {
+            "outputFormatting": {
+              "values": {
+                "general": "FORMATTED_VALUE",
+                "date": "FORMATTED_STRING"
+              }
+            },
+            "returnFirstMatch": true
+          }
+        },
+        "id": "5dbb2f6e-c00d-41d6-bbfb-4e015694ad3e",
+        "name": "Lookup Listino",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [880, 448],
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+            "name": "Google Sheets OAuth2 API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              { "id": "request_id", "name": "request_id", "type": "string", "value": "={{$('Assegna Stato Priorita').item.json.request_id}}" },
+              { "id": "timestamp", "name": "timestamp", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.timestamp }}" },
+              { "id": "azienda", "name": "azienda", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.azienda }}" },
+              { "id": "email", "name": "email", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.email }}" },
+              { "id": "servizio", "name": "servizio", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.servizio }}" },
+              { "id": "budget", "name": "budget", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.budget }}" },
+              { "id": "urgenza", "name": "urgenza", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.urgenza }}" },
+              { "id": "fonte", "name": "fonte", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.fonte }}" },
+              { "id": "messaggio", "name": "messaggio", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.messaggio }}" },
+              { "id": "source", "name": "source", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.source }}" },
+              { "id": "prezzo_base", "name": "prezzo_base", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.prezzo_base }}" },
+              { "id": "tempo_stimato", "name": "tempo_stimato", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.tempo_stimato }}" },
+              { "id": "note_listino", "name": "note_listino", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.note_listino }}" },
+              { "id": "status", "name": "status", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.status }}" },
+              { "id": "priorita", "name": "priorita", "type": "string", "value": "={{ $('Assegna Stato Priorita').item.json.priorita }}" }
+            ]
+          },
+          "options": { "ignoreConversionErrors": true }
+        },
+        "id": "ea4e07e8-0253-46f8-84f0-22bba334a810",
+        "name": "Prepara Riga Sheet",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [1920, 400]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": { "__rl": true, "value": "YOUR_GOOGLE_SHEET_ID", "mode": "id" },
+          "sheetName": { "__rl": true, "value": "Richieste", "mode": "name", "cachedResultName": "Richieste" },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Request ID": "={{ $json.request_id }}",
+              "Timestamp": "={{ $json.timestamp }}",
+              "Azienda": "={{ $json.azienda }}",
+              "Email": "={{ $json.email }}",
+              "Servizio": "={{ $json.servizio }}",
+              "Budget": "={{ $json.budget }}",
+              "Urgenza": "={{ $json.urgenza }}",
+              "Fonte": "={{ $json.fonte }}",
+              "Prezzo base": "={{ $json.prezzo_base }}",
+              "Tempo stimato": "={{ $json.tempo_stimato }}",
+              "Status": "={{ $json.status }}",
+              "Messaggio": "={{ $json.messaggio }}",
+              "Priorita": "={{ $json.priorita }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              { "id": "Request ID", "displayName": "Request ID", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Timestamp", "displayName": "Timestamp", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Azienda", "displayName": "Azienda", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Email", "displayName": "Email", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Servizio", "displayName": "Servizio", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Budget", "displayName": "Budget", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Urgenza", "displayName": "Urgenza", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Fonte", "displayName": "Fonte", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Prezzo base", "displayName": "Prezzo base", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Tempo stimato", "displayName": "Tempo stimato", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Status", "displayName": "Status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+              { "id": "Priorita", "displayName": "Priorita", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false },
+              { "id": "Messaggio", "displayName": "Messaggio", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {
+            "cellFormat": "USER_ENTERED",
+            "locationDefine": { "values": {} }
+          }
+        },
+        "id": "ae7632f0-2bfa-4ba3-9c73-c528cca78ec1",
+        "name": "Salva Richiesta",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [2144, 400],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+            "name": "Google Sheets OAuth2 API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              { "id": "request_id", "name": "request_id", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.request_id }}" },
+              { "id": "azienda", "name": "azienda", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.azienda }}" },
+              { "id": "email", "name": "email", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.email }}" },
+              { "id": "servizio", "name": "servizio", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.servizio }}" },
+              { "id": "budget", "name": "budget", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.budget }}" },
+              { "id": "urgenza", "name": "urgenza", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.urgenza }}" },
+              { "id": "fonte", "name": "fonte", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.fonte }}" },
+              { "id": "messaggio", "name": "messaggio", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.messaggio }}" },
+              { "id": "source", "name": "source", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.source }}" },
+              { "id": "prezzo_base", "name": "prezzo_base", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.prezzo_base }}" },
+              { "id": "tempo_stimato", "name": "tempo_stimato", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.tempo_stimato }}" },
+              { "id": "status", "name": "status", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.status }}" },
+              { "id": "priorita", "name": "priorita", "type": "string", "value": "={{ $('Prepara Riga Sheet').item.json.priorita }}" }
+            ]
+          },
+          "options": { "ignoreConversionErrors": true }
+        },
+        "id": "6b7043a7-b804-4f44-9e4f-716d59eefdde",
+        "name": "Prepara Notifica",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [2368, 400]
+      },
+      {
+        "parameters": {
+          "sendTo": "YOUR_EMAIL@DOMAIN.com",
+          "subject": "={{ \"Nuova richiesta preventivo - \" + $json.status + \" - \" + $json.azienda }}",
+          "emailType": "text",
+          "message": "=Hai ricevuto una nuova richiesta di preventivo.\n\nRequest ID: {{ $json.request_id }}\nCanale input: {{ $json.source }}\nAzienda: {{ $json.azienda }}\nEmail: {{ $json.email }}\nServizio: {{ $json.servizio }}\nBudget: {{ $json.budget }}\nUrgenza: {{ $json.urgenza }}\nFonte contatto: {{ $json.fonte }}\n\nStatus: {{ $json.status }}\nPriorita: {{ $json.priorita }}\nPrezzo base da listino: {{ $json.prezzo_base || 'non trovato' }}\nTempo stimato: {{ $json.tempo_stimato || 'non trovato' }}\n\nMessaggio:\n{{ $json.messaggio }}\n\n---\nOFFER BRIEF AI:\n{{ $('AI Offer Brief').item.json.output[0].content[0].text }}",
+          "options": { "appendAttribution": false }
+        },
+        "id": "a6313d76-cfaf-46e0-b0c9-acd3e0743a86",
+        "name": "Notifica Commerciale",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [2592, 400],
+        "webhookId": "REPLACE_WITH_WEBHOOK_ID",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "id": "f675289c-486b-48eb-a7b7-8e1322c5e740",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [-576, 704]
+      },
+      {
+        "parameters": {
+          "sendTo": "YOUR_EMAIL@DOMAIN.com",
+          "subject": "={{ \"Errore workflow - \" + $json.workflow.name }}",
+          "emailType": "text",
+          "message": "=Il workflow ha generato un errore.\n\nWorkflow: {{ $json.workflow.name }}\nExecution ID: {{ $json.execution.id }}\nErrore: {{ $json.execution.error.message }}\n",
+          "options": { "appendAttribution": false }
+        },
+        "id": "1a7d6c26-0895-484f-82fe-076a7b92b2c0",
+        "name": "Notify Workflow Error",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [-352, 704],
+        "webhookId": "REPLACE_WITH_WEBHOOK_ID",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.6-luna",
+            "mode": "list",
+            "cachedResultName": "GPT-5.6-LUNA"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "Sei un assistente di qualificazione commerciale.\nIl tuo compito è analizzare una richiesta in linguaggio naturale e restituire\nun oggetto JSON strutturato con le informazioni estratte.\n\n\nREGOLE FONDAMENTALI:\n- Non inventare MAI informazioni non presenti nel testo.\n- Se un campo non è presente nel testo, impostalo a null.\n- Non aggiungere campi extra non previsti dallo schema.\n- Rispondi SOLO con il JSON, senza testo aggiuntivo, senza markdown.\n\n\nSCHEMA OUTPUT:\n{\n  \"azienda\": string | null,\n  \"email\": string | null,\n  \"servizio_richiesto\": string,\n  \"budget\": string | null,\n  \"urgenza\": \"Alta\" | \"Media\" | \"Bassa\" | null,\n  \"fonte\": string | null,\n  \"messaggio_originale\": string,\n  \"campi_mancanti\": string[],\n  \"domande_chiarimento\": string[],\n  \"status\": \"Nuova richiesta\" | \"Da qualificare\",\n  \"next_action\": \"proceed\" | \"ask_clarification\"\n}\n\n\nLOGICA STATUS E NEXT_ACTION:\n- Se servizio_richiesto è chiaro E budget non è null → status: \"Nuova richiesta\", next_action: \"proceed\"\n- In tutti gli altri casi → status: \"Da qualificare\", next_action: \"ask_clarification\"\n\n\nLOGICA URGENZA:\n- Alta: parole come \"urgente\", \"subito\", \"entro X giorni\", \"fine mese\", \"prima possibile\"\n- Bassa: parole come \"non ho fretta\", \"quando volete\", \"nei prossimi mesi\"\n- Media: tutto il resto o nessun indicatore\n"
+              },
+              {
+                "content": "=Analizza questa richiesta commerciale e restituisci il JSON strutturato.\n\n\nRichiesta:\n{{ $json.azienda }}\n{{ $json.email }}\n{{ $json.servizio }}\n{{ $json.budget }}\n{{ $json.urgenza }}\n{{ $json.fonte }}\n{{ $json.messaggio }}\n\n\n"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {
+            "textFormat": {
+              "textOptions": {
+                "type": "json_schema",
+                "verbosity": "low",
+                "schema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"properties\": {\n    \"azienda\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"email\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"servizio_richiesto\": {\n      \"type\": \"string\"\n    },\n    \"budget\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"urgenza\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"Alta\", \"Media\", \"Bassa\", null]\n    },\n    \"fonte\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"messaggio_originale\": {\n      \"type\": \"string\"\n    },\n    \"campi_mancanti\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"domande_chiarimento\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\"Nuova richiesta\", \"Da qualificare\"]\n    },\n    \"next_action\": {\n      \"type\": \"string\",\n      \"enum\": [\"proceed\", \"ask_clarification\"]\n    }\n  },\n  \"required\": [\n    \"azienda\",\n    \"email\",\n    \"servizio_richiesto\",\n    \"budget\",\n    \"urgenza\",\n    \"fonte\",\n    \"messaggio_originale\",\n    \"campi_mancanti\",\n    \"domande_chiarimento\",\n    \"status\",\n    \"next_action\"\n  ]\n}"
+            }
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.3,
+        "position": [80, 576],
+        "id": "bab56f61-4a7d-47e5-a48d-501d0391a5fb",
+        "name": "AI Qualification Node",
+        "credentials": {
+          "openAiApi": {
+            "id": "REPLACE_WITH_OPENAI_CREDENTIAL_ID",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "a19d7df7-e750-4ad3-9032-f02a216b59dc",
+                "leftValue": "={{ $json.output[0].content[0].text.next_action }}",
+                "rightValue": "proceed",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [560, 640],
+        "id": "b0076b61-3f42-47be-8c94-819469a508b6",
+        "name": "IF next_action"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.6-luna",
+            "mode": "list",
+            "cachedResultName": "GPT-5.6-LUNA"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "Sei un assistente commerciale interno per un'agenzia di automazione.\nPrepara un brief sintetico e operativo per il team commerciale.\nRispondi SOLO con il brief, senza testo aggiuntivo.\n\nStruttura obbligatoria (usa esattamente questi titoli):\n\nSINTESI RICHIESTA\n[1-2 righe: chi ha scritto, cosa vuole, contesto rilevante]\n\nSERVIZIO E PREZZO\n[servizio richiesto, prezzo base da listino, tempo stimato]\n\nSEGNALI DI RISCHIO\n[budget vs prezzo, scope definito, urgenza senza budget. Se nessun rischio: Nessun rischio rilevante.]\n\nPROSSIMO PASSO\n[una frase sola: cosa deve fare il commerciale adesso]\n\nBOZZA EMAIL AL LEAD\n[email breve e professionale, tono caldo, includi prossimo step e firma generica]"
+              },
+              {
+                "content": "=Prepara il brief commerciale per questa richiesta.\n\nAzienda: {{ $json.azienda }}\nServizio richiesto: {{ $json.servizio }}\nBudget dichiarato: {{ $json.budget }}\nUrgenza: {{ $json.urgenza }}\nStatus: {{ $json.status }}\nMessaggio originale: {{ $json.messaggio }}\n\nDal listino:\nPrezzo base: {{ $json.prezzo_base || 'non trovato' }}\nTempo stimato: {{ $json.tempo_stimato || 'non trovato' }}\nNote: {{ $json.note_listino || 'nessuna' }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "id": "4d374f62-513a-4915-926d-23f544794e2c",
+        "name": "AI Offer Brief",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.3,
+        "position": [1488, 592],
+        "credentials": {
+          "openAiApi": {
+            "id": "REPLACE_WITH_OPENAI_CREDENTIAL_ID",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              { "id": "to", "name": "to", "type": "string", "value": "={{ $json.output[0].content[0].text.email || '' }}" },
+              { "id": "subject", "name": "subject", "type": "string", "value": "={{ 'Alcune informazioni sulla tua richiesta - ' + ($json.output[0].content[0].text.azienda || 'la tua azienda') }}" },
+              { "id": "body", "name": "body", "type": "string", "value": "=Ciao,\n\nGrazie per averci contattato.\n\nPer prepararti una proposta accurata, avremmo bisogno di alcune informazioni aggiuntive:\n\n- {{ $json.output[0].content[0].text.domande_chiarimento.join('\\n- ') }}\n\nA presto,\nIl team" }
+            ]
+          },
+          "options": { "ignoreConversionErrors": true }
+        },
+        "id": "016bfe1d-8fd8-4cd2-856d-34aca20c35d3",
+        "name": "Prepara Email Chiarimento",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [912, 816]
+      },
+      {
+        "parameters": {
+          "sendTo": "=YOUR_EMAIL@DOMAIN.com",
+          "subject": "={{ $json.subject }}",
+          "emailType": "text",
+          "message": "={{ $json.body }}",
+          "options": { "appendAttribution": false }
+        },
+        "id": "3e639e8f-854f-47b1-901e-02abacb38788",
+        "name": "Invia Email Chiarimento",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [1216, 816],
+        "webhookId": "REPLACE_WITH_WEBHOOK_ID",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              { "id": "request_id", "name": "request_id", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.request_id }}" },
+              { "id": "timestamp", "name": "timestamp", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.timestamp }}" },
+              { "id": "azienda", "name": "azienda", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.azienda }}" },
+              { "id": "email", "name": "email", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.email }}" },
+              { "id": "servizio", "name": "servizio", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.servizio }}" },
+              { "id": "budget", "name": "budget", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.budget }}" },
+              { "id": "urgenza", "name": "urgenza", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.urgenza }}" },
+              { "id": "fonte", "name": "fonte", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.fonte }}" },
+              { "id": "messaggio", "name": "messaggio", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.messaggio }}" },
+              { "id": "source", "name": "source", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.source }}" },
+              { "id": "prezzo_base", "name": "prezzo_base", "type": "string", "value": "={{ $json[\"Prezzo base\"] || \"\" }}" },
+              { "id": "tempo_stimato", "name": "tempo_stimato", "type": "string", "value": "={{ $json[\"Tempo stimato\"] || \"\" }}" },
+              { "id": "note_listino", "name": "note_listino", "type": "string", "value": "={{ $json.Note || \"\" }}" },
+              { "id": "status", "name": "status", "type": "string", "value": "={{ !$json[\"Prezzo base\"] || $('Prepara Dati Richiesta').item.json.budget === \"Indefinito\" ? \"Da qualificare\" : \"Nuova richiesta\" }}" },
+              { "id": "priorita", "name": "priorita", "type": "string", "value": "={{ $('Prepara Dati Richiesta').item.json.urgenza === \"Alta\" ? \"Alta\" : \"Normale\" }}" }
+            ]
+          },
+          "options": { "ignoreConversionErrors": true }
+        },
+        "id": "940f7e5c-0649-4b3d-a6a2-588fd70269d6",
+        "name": "Assegna Stato Priorita",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [1168, 448]
+      }
+    ],
+    "connections": {
+      "Form - Richiesta Preventivo": {
+        "main": [[{ "node": "Prepara Dati Richiesta", "type": "main", "index": 0 }]]
+      },
+      "Prepara Dati Richiesta": {
+        "main": [[{ "node": "AI Qualification Node", "type": "main", "index": 0 }]]
+      },
+      "Lookup Listino": {
+        "main": [[{ "node": "Assegna Stato Priorita", "type": "main", "index": 0 }]]
+      },
+      "Prepara Riga Sheet": {
+        "main": [[{ "node": "Salva Richiesta", "type": "main", "index": 0 }]]
+      },
+      "Salva Richiesta": {
+        "main": [[{ "node": "Prepara Notifica", "type": "main", "index": 0 }]]
+      },
+      "Prepara Notifica": {
+        "main": [[{ "node": "Notifica Commerciale", "type": "main", "index": 0 }]]
+      },
+      "Error Trigger": {
+        "main": [[{ "node": "Notify Workflow Error", "type": "main", "index": 0 }]]
+      },
+      "AI Qualification Node": {
+        "main": [[{ "node": "IF next_action", "type": "main", "index": 0 }]]
+      },
+      "IF next_action": {
+        "main": [
+          [{ "node": "Lookup Listino", "type": "main", "index": 0 }],
+          [{ "node": "Prepara Email Chiarimento", "type": "main", "index": 0 }]
+        ]
+      },
+      "AI Offer Brief": {
+        "main": [[{ "node": "Prepara Riga Sheet", "type": "main", "index": 0 }]]
+      },
+      "Prepara Email Chiarimento": {
+        "main": [[{ "node": "Invia Email Chiarimento", "type": "main", "index": 0 }]]
+      },
+      "Assegna Stato Priorita": {
+        "main": [[{ "node": "AI Offer Brief", "type": "main", "index": 0 }]]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "REPLACE_WITH_AUTHOR_NAME",
+    "name": "Sistema Gestione Preventivi - Version 2026-08-21 17:37",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-08-21T15:37:34.098Z",
+    "updatedAt": "2026-08-21T15:38:18.000Z"
+  }
+}

@@ -1,0 +1,538 @@
+{
+  "id": "BLl4aeGsBNGWSoxn",
+  "name": "Automazione Estrapolazione Contabilità e Contratto — Analisi Premi Fornitori",
+  "description": "Workflow n8n per il confronto automatico tra dati contabili e contratti di fornitura. Agente AI che compila fogli di analisi premi.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Edit Fields - name e id contratto').item.json.file_selezionato_contratto_id}}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [2240, 16],
+      "id": "5ffcf3ed-c4e0-4e2d-96f1-c823e74d0835",
+      "name": "Download file - Scarica Contratto",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+            "mode": "list",
+            "cachedResultName": "Generazione contabilita e contratto e analisi premi"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {
+          "fields": ["*"]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [224, 16],
+      "id": "f88c2633-db4f-42b3-995f-a8661538f126",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Contratto e Contabilità Fornitore",
+        "options": {
+          "buttonLabel": "Avanti"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [-224, 16],
+      "id": "ce658348-b953-44f1-8ae3-4e1238f3f97f",
+      "name": "Form Trigger",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"name\": \"{{ $json.name }}\",\n  \"id\": \"{{ $json.id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [448, 16],
+      "id": "29c0066b-f926-48d0-ab1f-ab6a214e5f3f",
+      "name": "Edit Fields - name e id files"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "nomi_file_aggiornati",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [672, 16],
+      "id": "52ba6cc3-d61f-4008-8d96-1cc56948e1fa",
+      "name": "Aggregate - nomi_file_aggiornati"
+    },
+    {
+      "parameters": {
+        "defineForm": "json",
+        "jsonOutput": "=[\n  {\n    \"fieldName\": \"file_selezionato_contabilita\",\n    \"fieldLabel\": \"Seleziona il File di Contabilità\",\n    \"fieldType\": \"dropdown\",\n    \"fieldOptions\": {\n      \"values\": {{ $json.nomi_file_aggiornati.map(fcon => ({ \"option\": fcon.name })) }}\n    },\n    \"requiredField\": true\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [896, 16],
+      "id": "0a91a740-0996-4f92-86b4-60f57e5a36bc",
+      "name": "Form - Contabilità",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "defineForm": "json",
+        "jsonOutput": "=[\n  {\n    \"fieldName\": \"file_selezionato_contratto\",\n    \"fieldLabel\": \"Seleziona il Contratto di Fornitura\",\n    \"fieldType\": \"dropdown\",\n    \"fieldOptions\": {\n      \"values\": {{ $('Aggregate - nomi_file_aggiornati').first().json.nomi_file_aggiornati.map(fcontratto => ({ \"option\": fcontratto.name })) }}\n    },\n    \"requiredField\": true\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [1120, 16],
+      "id": "9a4168ec-dab1-44aa-a692-33e20a7bf919",
+      "name": "Form - Contratto di Fornitura",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7f3385f-3438-471c-ae79-1bbcc5403f22",
+              "name": "file_selezionato_contratto",
+              "value": "={{ $('Form - Contratto di Fornitura').item.json.file_selezionato_contratto }}",
+              "type": "string"
+            },
+            {
+              "id": "952c9469-25c9-4153-bf39-2fe9797396bc",
+              "name": "file_selezionato_contratto_id",
+              "value": "={{ $('Aggregate - nomi_file_aggiornati').item.json.nomi_file_aggiornati.find(file => file.name === $('Form - Contratto di Fornitura').item.json.file_selezionato_contratto).id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1792, 16],
+      "id": "b9d55ebb-b39a-4fcc-9b3c-9e0d8c522521",
+      "name": "Edit Fields - name e id contratto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7f3385f-3438-471c-ae79-1bbcc5403f22",
+              "name": "file_selezionato_contabilita",
+              "value": "={{ $('Form - Contabilità').item.json.file_selezionato_contabilita }}",
+              "type": "string"
+            },
+            {
+              "id": "952c9469-25c9-4153-bf39-2fe9797396bc",
+              "name": "file_selezionato_contabilita_id",
+              "value": "={{ $('Aggregate - nomi_file_aggiornati').item.json.nomi_file_aggiornati.find(file => file.name === $('Form - Contabilità').item.json.file_selezionato_contabilita).id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2016, 16],
+      "id": "d2029b31-6776-4946-826b-8cc4d0e8e464",
+      "name": "Edit Fields - name e id contabilita"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [2464, 16],
+      "id": "feed222a-a4ec-4c0f-8f8f-103812ee8553",
+      "name": "Extract from File - Estrai contratto"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Tool per consultare la contabilità del fornitore: calcolo fatturato totale annuo al netto di premi, fatturato per linea merceologica, importi premi in cifra fissa e totali premi di fine anno in %.",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Edit Fields - name e id contabilita').item.json.file_selezionato_contabilita_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [2816, 240],
+      "id": "f83bb232-0c68-4c40-85e9-0e170c4f0708",
+      "name": "Get row(s) in contabilità",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "HTTP Request per scrivere nel foglio di analisi i dati contabili e contrattuali",
+        "method": "PUT",
+        "url": "={{ $fromAI('URL', '', 'string') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $fromAI('JSON', 'Body per inserire dati nel foglio', 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [2944, 240],
+      "id": "520eb544-1c5a-4884-9a20-c5317e90ffc6",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=CHI SEI: Sei un consulente revisore senior specializzato a riscontrare squadrature nei premi scaturenti dal confronto tra dati contabili e contratto di fornitura.\n\nOBIETTIVO: Compilare il foglio di analisi con Anno, Fornitore, linee merceologiche, fatturati al netto dei premi, cifre fisse e % premi.\n\nFONTI: Tool 'Get row(s) in contabilità' per dati contabili e testo del contratto.\n\nISTRUZIONI: Compilare le celle secondo lo schema del foglio. Non sovrascrivere celle con formule. Valori numerici senza formattazione particolare.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [2816, 16],
+      "id": "7f45f29c-7225-4926-9295-52084eeab016",
+      "name": "AI Agent - Estrapolazione dati contabili e contrattuali e compilazione analisi"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "medium"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [2688, 240],
+      "id": "c14a8baa-7291-47a8-9b16-36af6aa45812",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Tool per leggere il foglio di analisi",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ANALYSIS_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Copy of Foglio Analisi Fornitore"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [3072, 240],
+      "id": "41d3cd31-e913-4cf3-8838-1923ae3dae01",
+      "name": "Get row(s) in Copy of Foglio Analisi Fornitore",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "YOUR_TEMPLATE_FILE_ID",
+          "mode": "list",
+          "cachedResultName": "Foglio Analisi Fornitore"
+        },
+        "name": "Copy of Foglio Analisi Fornitore",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [0, 16],
+      "id": "d95b31ec-4723-4ae3-95c7-138f740d28fe",
+      "name": "Copy file - Copia Foglio Analisi Fornitore",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{ \"file_copy_of_foglio_analisi_fornitore\":\"Copy of Foglio Analisi Fornitore\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1344, 16],
+      "id": "4e62b335-3799-48e7-bb54-aacff411f9f7",
+      "name": "Edit Fields - Copy of Foglio Analisi Fornitore"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7f3385f-3438-471c-ae79-1bbcc5403f22",
+              "name": "file_Copy_of_Foglio_Analisi_Fornitore",
+              "value": "={{$('Edit Fields - Copy of Foglio Analisi Fornitore').item.json.file_copy_of_foglio_analisi_fornitore}}",
+              "type": "string"
+            },
+            {
+              "id": "952c9469-25c9-4153-bf39-2fe9797396bc",
+              "name": "file_Copy_of_Foglio_Analisi_Fornitore_id",
+              "value": "={{ $('Aggregate - nomi_file_aggiornati').item.json.nomi_file_aggiornati.find(file => file.name === $('Edit Fields - Copy of Foglio Analisi Fornitore').item.json.file_copy_of_foglio_analisi_fornitore).id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1568, 16],
+      "id": "33163300-04ad-46c0-9c9f-9892b610ddca",
+      "name": "Edit Fields - name e id Copy of Foglio Analisi Fornitore"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Edit Fields - name e id Copy of Foglio Analisi Fornitore').item.json.file_Copy_of_Foglio_Analisi_Fornitore_id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "=Foglio Analisi Fornitore Terminata - {{ $('Edit Fields - name e id contratto').item.json.file_selezionato_contratto }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [3280, 16],
+      "id": "e21763ee-a47c-482c-b396-c824f5211028",
+      "name": "Update file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnBinary",
+        "completionTitle": "Analisi Terminata",
+        "completionMessage": "={{ $('AI Agent - Estrapolazione dati contabili e contrattuali e compilazione analisi').item.json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [3728, 16],
+      "id": "5148e690-b6ae-4abb-8e41-ba7fc3b13885",
+      "name": "Form",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "url": "=https://docs.google.com/spreadsheets/d/{{ $('Edit Fields - name e id Copy of Foglio Analisi Fornitore').item.json.file_Copy_of_Foglio_Analisi_Fornitore_id }}/export?format=xlsx",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3504, 16],
+      "id": "aad8de91-6990-44b1-a357-385c31da6e22",
+      "name": "HTTP Request - Dowload google sheet Foglio Analisi Fornitore Terminata",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-224, 256],
+      "id": "87d80ffd-5ba6-445d-9668-6d2bd395919f",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@example.com",
+        "subject": "ERRORE Workflow n8n",
+        "emailType": "text",
+        "message": "=Errore nel workflow:\n\nmessage:{{ $('Error Trigger').item.json.execution.error.message }}\n\nworkflow:{{ $('Error Trigger').item.json.workflow.name }}\n\nlast node executed:{{ $json.execution.lastNodeExecuted }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [0, 256],
+      "id": "7e8cfbde-5794-4c6a-b3a8-0b432ba3a673",
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Download file - Scarica Contratto": {
+      "main": [[{"node": "Extract from File - Estrai contratto", "type": "main", "index": 0}]]
+    },
+    "Search files and folders": {
+      "main": [[{"node": "Edit Fields - name e id files", "type": "main", "index": 0}]]
+    },
+    "Form Trigger": {
+      "main": [[{"node": "Copy file - Copia Foglio Analisi Fornitore", "type": "main", "index": 0}]]
+    },
+    "Edit Fields - name e id files": {
+      "main": [[{"node": "Aggregate - nomi_file_aggiornati", "type": "main", "index": 0}]]
+    },
+    "Aggregate - nomi_file_aggiornati": {
+      "main": [[{"node": "Form - Contabilità", "type": "main", "index": 0}]]
+    },
+    "Form - Contabilità": {
+      "main": [[{"node": "Form - Contratto di Fornitura", "type": "main", "index": 0}]]
+    },
+    "Form - Contratto di Fornitura": {
+      "main": [[{"node": "Edit Fields - Copy of Foglio Analisi Fornitore", "type": "main", "index": 0}]]
+    },
+    "Edit Fields - name e id contratto": {
+      "main": [[{"node": "Edit Fields - name e id contabilita", "type": "main", "index": 0}]]
+    },
+    "Edit Fields - name e id contabilita": {
+      "main": [[{"node": "Download file - Scarica Contratto", "type": "main", "index": 0}]]
+    },
+    "Extract from File - Estrai contratto": {
+      "main": [[{"node": "AI Agent - Estrapolazione dati contabili e contrattuali e compilazione analisi", "type": "main", "index": 0}]]
+    },
+    "Get row(s) in contabilità": {
+      "ai_tool": [[{"node": "AI Agent - Estrapolazione dati contabili e contrattuali e compilazione analisi", "type": "ai_tool", "index": 0}]]
+    },
+    "HTTP Request": {
+      "ai_tool": [[{"node": "AI Agent - Estrapolazione dati contabili e contrattuali e compilazione analisi", "type": "ai_tool", "index": 0}]]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{"node": "AI Agent - Estrapolazione dati contabili e contrattuali e compilazione analisi", "type": "ai_languageModel", "index": 0}]]
+    },
+    "AI Agent - Estrapolazione dati contabili e contrattuali e compilazione analisi": {
+      "main": [[{"node": "Update file", "type": "main", "index": 0}]]
+    },
+    "Get row(s) in Copy of Foglio Analisi Fornitore": {
+      "ai_tool": [[{"node": "AI Agent - Estrapolazione dati contabili e contrattuali e compilazione analisi", "type": "ai_tool", "index": 0}]]
+    },
+    "Copy file - Copia Foglio Analisi Fornitore": {
+      "main": [[{"node": "Search files and folders", "type": "main", "index": 0}]]
+    },
+    "Edit Fields - Copy of Foglio Analisi Fornitore": {
+      "main": [[{"node": "Edit Fields - name e id Copy of Foglio Analisi Fornitore", "type": "main", "index": 0}]]
+    },
+    "Edit Fields - name e id Copy of Foglio Analisi Fornitore": {
+      "main": [[{"node": "Edit Fields - name e id contratto", "type": "main", "index": 0}]]
+    },
+    "Update file": {
+      "main": [[{"node": "HTTP Request - Dowload google sheet Foglio Analisi Fornitore Terminata", "type": "main", "index": 0}]]
+    },
+    "HTTP Request - Dowload google sheet Foglio Analisi Fornitore Terminata": {
+      "main": [[{"node": "Form", "type": "main", "index": 0}]]
+    },
+    "Error Trigger": {
+      "main": [[{"node": "Send a message", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

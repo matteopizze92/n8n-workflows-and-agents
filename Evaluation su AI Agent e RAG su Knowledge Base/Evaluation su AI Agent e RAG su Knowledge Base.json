@@ -1,0 +1,489 @@
+{
+  "id": "OkGPmwK8Vg62lbDO",
+  "name": "AI Agent — Supporto Commerciale con RAG",
+  "description": "Agent AI per supporto commerciale con RAG su knowledge base e listino dinamico.",
+  "active": true,
+  "activeVersionId": "f4305733-e38e-4834-a981-db51b0f10252",
+  "createdAt": "2026-08-24T08:25:45.966Z",
+  "updatedAt": "2026-08-24T13:21:23.073Z",
+  "isArchived": false,
+  "versionId": "5e5dbb40-1f24-4f31-9cbf-77e88473d6fb",
+  "versionCounter": 79,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Usa questo tool quando cerchi informazioni su come funzionano i servizi, policy commerciali, termini, FAQ o casi simili. NON usarlo per cercare dati strutturati come prezzi o stati delle richieste.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 20,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [528, 816],
+      "id": "30c276fe-9cf0-465e-8de8-6c1e131873a0",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [-592, 464],
+      "id": "53a2c97c-cebb-4591-bfc9-7254477edec0",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [-96, 976],
+      "id": "e295cf42-b28a-4fbc-a978-c891bb92f5e6",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [448, 672],
+      "id": "d34b05b0-d113-4bd5-bc8f-bd4547c5d0b5",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee9ba901-89d1-4e35-9dd3-fc2dca9968c7",
+              "name": "data_oggi",
+              "value": "={{$now}}",
+              "type": "string"
+            },
+            {
+              "id": "48f4bd2c-e713-4618-b007-bc59c6e6bd43",
+              "name": "messaggio",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "d636591a-0383-45d0-853b-6a01eac2dfe2",
+              "name": "id_foglio",
+              "value": "YOUR_GOOGLE_SPREADSHEET_ID",
+              "type": "string"
+            },
+            {
+              "id": "4dd20197-dd93-4a9f-ac68-e9286bf6e3d0",
+              "name": "gid_Listino",
+              "value": "YOUR_GID_LISTINO",
+              "type": "string"
+            },
+            {
+              "id": "c207009c-5674-45ae-af0c-daefebbed6da",
+              "name": "gid_FAQ",
+              "value": "YOUR_GID_FAQ",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [128, 464],
+      "id": "a0f493d4-7040-4d90-ad37-c2a1626f362b",
+      "name": "Parametri e Contesto x Agente"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Contiene il listino ufficiale dei servizi dell'agenzia con prezzi base, tempi stimati e note operative.\nUsa questo tool quando ti chiedono: prezzi, disponibilità di un servizio, tempi di consegna, confronto tra servizi, o se un budget è compatibile con un determinato servizio.",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $json.id_foglio }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.gid_Listino }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [752, 672],
+      "id": "2966e593-0d86-494e-9b9e-df2981ec1bde",
+      "name": "Listino Servizi",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa questo strumento per aggiungere nuovi servizi al listino.",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $json.id_foglio }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.gid_Listino }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Servizio": "={{ $fromAI('Servizio', 'Definisci il nome del servizio da aggiungere alla tabella.', 'string') }}",
+            "Prezzo base": "={{ $fromAI('Prezzo_base', 'Definisci il prezzo del nuovo servizio.', 'string') }}",
+            "Tempo stimato": "={{ $fromAI('Tempo_stimato', 'Definisci il tempo stimato per la realizzazione.', 'string') }}",
+            "Note": "={{ $fromAI('Note', 'Aggiungi note ad uso interno.', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "Servizio", "displayName": "Servizio", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Prezzo base", "displayName": "Prezzo base", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Tempo stimato", "displayName": "Tempo stimato", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Note", "displayName": "Note", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [912, 672],
+      "id": "5b9392b5-306c-4ae9-bed2-b46e9a3daf06",
+      "name": "Aggiungi servizio a listino",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Ciao! Sono il tuo Agente di supporto commerciale.\nCosa posso fare per te oggi?",
+        "options": {
+          "allowFileUploads": false,
+          "inputPlaceholder": "Scrivi qui il tuo messaggio...",
+          "subtitle": "",
+          "title": "Il tuo assistente personale"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [-96, 464],
+      "id": "fa50acc6-d7f7-45c0-9b17-7631af3ad7c5",
+      "name": "Chat Trigger",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [-432, 640],
+      "id": "0b361dda-791d-47a4-8a5f-897ec98ca0d2",
+      "name": "Default Data Loader",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [-432, 640],
+      "id": "0b361dda-791d-47a4-8a5f-897ec98ca0d2",
+      "name": "Default Data Loader",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Agent Eval",
+          "cachedResultUrl": "/projects/YOUR_PROJECT_ID/datatables/YOUR_DATATABLE_ID"
+        }
+      },
+      "type": "n8n-nodes-base.evaluationTrigger",
+      "typeVersion": 4.7,
+      "position": [0, 0],
+      "id": "74a40d85-5e80-451b-8ff5-548bee771514",
+      "name": "When fetching a dataset row",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "setMetrics",
+        "expectedAnswer": "={{ $('When fetching a dataset row').item.json.expected_output }}",
+        "actualAnswer": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.8,
+      "position": [992, 0],
+      "id": "dc8fc135-5af0-459d-8d50-3af9fb842970",
+      "name": "Evaluation2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATATABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Agent Eval",
+          "cachedResultUrl": "/projects/YOUR_PROJECT_ID/datatables/YOUR_DATATABLE_ID"
+        },
+        "outputs": {
+          "values": [
+            {
+              "outputName": "output_AI",
+              "outputValue": "={{ $json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.8,
+      "position": [784, 0],
+      "id": "387fc69e-1c5f-4a29-a842-2dd529b96206",
+      "name": "Evaluation1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [288, 672],
+      "id": "c467ec5a-8d30-48f8-b03c-0fc7a4a698b8",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_DOC_ID",
+          "mode": "list",
+          "cachedResultName": "FAQ_Servizi_AI_Automazione",
+          "cachedResultUrl": "https://docs.google.com/document/d/YOUR_GOOGLE_DOC_ID/edit"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-816, 464],
+      "id": "33d1f2a6-55fc-457f-8968-adc7a745b7d7",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=Sei un assistente commerciale interno per un'agenzia di automazione e AI.\nIl tuo compito è supportare il team commerciale nell'analisi delle richieste in arrivo e nel decidere il prossimo passo operativo.\n\nCOSA PUOI FARE:\n- Rispondere a domande sui servizi dell'agenzia e i relativi prezzi\n- Aiutare a valutare se una richiesta è pronta per un preventivo\n- Suggerire domande di chiarimento da fare al lead\n- Spiegare i tempi e i processi tipici per ogni servizio\n\nCOME USARE I TOOL:\n- Usa 'Listino Servizi' quando ti chiedono prezzi, tempi o disponibilità di un servizio\n- Usa 'FAQ Servizi' quando ti chiedono come funziona un servizio, cosa include, cosa serve per iniziare, o quando hai dubbi sulla risposta.\n- Usa \"Aggiungi servizio a listino\" per inserire nel listino un nuovo servizio.\n\nSTILE:\n- Risposte brevi e-operative. Massimo 5 righe salvo richiesta esplicita.\n- Se non sai qualcosa, dillo chiaramente. Non inventare.\n- Alla fine di ogni risposta indica quale tool hai usato (se ne hai usato uno).\n- Rispondi sempre in italiano.\n\nCOSE DA NON FARE:\n- Non inviare email o modificare dati\n- Non fare promesse su prezzi o tempi senza consultare il listino\n- Non condividere dati di altri clienti\n- Non rispondere in Inglese\n\nLa data di oggi è {{ $json.data_oggi }}.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [384, 464],
+      "id": "ff48f2ea-1fd1-406a-94e4-6305bdf7fb72",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [1136, 208],
+      "id": "a44bac8d-0c07-427c-8cd1-1a64c45abcb4",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [1232, 512],
+      "id": "85ecda39-bd9e-4ecd-82f5-cea9a762eb2d",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@example.com",
+        "subject": "ERRORE Workflow n8n",
+        "emailType": "text",
+        "message": "={{ $json.workflow.name }} è andato in errore.\n\nerror message: {{ $json.execution.error.message }}\nlastNodeExecuted: {{ $json.execution.lastNodeExecuted }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [1456, 512],
+      "id": "dea989d2-417c-463e-bd7e-c824d5a69f81",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Supabase Vector Store": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          { "node": "Supabase Vector Store1", "type": "ai_embedding", "index": 0 },
+          { "node": "Supabase Vector Store", "type": "ai_embedding", "index": 0 }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [[{ "node": "AI Agent", "type": "ai_memory", "index": 0 }]]
+    },
+    "Parametri e Contesto x Agente": {
+      "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]]
+    },
+    "Listino Servizi": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "Aggiungi servizio a listino": {
+      "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "Chat Trigger": {
+      "main": [[{ "node": "Parametri e Contesto x Agente", "type": "main", "index": 0 }]]
+    },
+    "Default Data Loader": {
+      "ai_document": [[{ "node": "Supabase Vector Store1", "type": "ai_document", "index": 0 }]]
+    },
+    "Edit Fields": {
+      "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]]
+    },
+    "When fetching a dataset row": {
+      "main": [[{ "node": "Edit Fields", "type": "main", "index": 0 }]]
+    },
+    "Evaluation1": {
+      "main": [[{ "node": "Evaluation2", "type": "main", "index": 0 }]]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "AI Agent", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Download file": {
+      "main": [[{ "node": "Supabase Vector Store1", "type": "main", "index": 0 }]]
+    },
+    "AI Agent": {
+      "main": [[{ "node": "Evaluation1", "type": "main", "index": 0 }]]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [[{ "node": "Evaluation2", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Error Trigger": {
+      "main": [[{ "node": "Send a message", "type": "main", "index": 0 }]]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

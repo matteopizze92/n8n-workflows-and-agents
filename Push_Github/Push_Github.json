@@ -1,0 +1,101 @@
+{
+  "name": "Push_Github",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "f13e81d9-6408-4c40-afb8-66e4cb842e32",
+      "name": "When clicking 'Execute workflow'"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_WORKFLOW_NAME"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [224, 0],
+      "id": "828b065c-b23a-410d-a220-f556b02df9f4",
+      "name": "Get a workflow",
+      "credentials": {
+        "n8nApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_N8N_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "YOUR_GITHUB_USERNAME",
+          "mode": "list",
+          "cachedResultName": "YOUR_GITHUB_USERNAME",
+          "cachedResultUrl": "https://github.com/YOUR_GITHUB_USERNAME"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR_GITHUB_REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR_GITHUB_REPO",
+          "cachedResultUrl": "https://github.com/YOUR_GITHUB_USERNAME/YOUR_GITHUB_REPO"
+        },
+        "filePath": "={{ $json.name }}.json",
+        "fileContent": "={{ JSON.stringify($json, null, 2) }}",
+        "commitMessage": "=Backup workflow {{ $json.name }} - {{ $now.format('yyyy-MM-dd HH:mm') }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [448, 0],
+      "id": "38ea9c94-ae73-4041-9fc8-bfbd6fb942aa",
+      "name": "Edit a file",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR_GITHUB_CREDENTIAL_ID",
+          "name": "YOUR_GITHUB_CREDENTIAL_NAME"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "Get a workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
